@@ -1,0 +1,40 @@
+# Binaries
+quan-ly-sach
+quan-ly-sach.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go build cache
+tmp/
+*.log
+build-errors.log
+
+# Air temporary files
+.air.toml.bak
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+data.json.bak
+
+# Environment files
+.env
+.env.local

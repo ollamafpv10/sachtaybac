@@ -1,0 +1,45 @@
+{
+  "books": [
+    {
+      "ghiChu": "888",
+      "giaMoi": "67",
+      "id": 1,
+      "lan1": "79",
+      "lan2": "5",
+      "lan3": "555",
+      "lan4": "555",
+      "lan5": "5",
+      "lan6": "6",
+      "mang": "",
+      "stt": 1,
+      "tanKho": "8",
+      "tenSach": "sach toan 1",
+      "traLai": "4"
+    },
+    {
+      "ghiChu": "555",
+      "giaMoi": "67000",
+      "id": 2,
+      "lan1": "6",
+      "lan2": "5",
+      "lan3": "5",
+      "lan4": "5",
+      "lan5": "",
+      "lan6": "",
+      "mang": "Ngoại ngữ",
+      "stt": 2,
+      "tanKho": "30",
+      "tenSach": "sach tieng viet 2",
+      "traLai": "4"
+    }
+  ],
+  "lanColumns": [
+    "lan1",
+    "lan2",
+    "lan3",
+    "lan4",
+    "lan5",
+    "lan6"
+  ],
+  "lastUpdated": "2025-11-14T23:30:17+07:00"
+}
