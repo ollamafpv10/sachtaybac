@@ -1,0 +1,40 @@
+# Docker ignore patterns for optimized builds
+.git
+.gitignore
+README.md
+DEPLOYMENT.md
+*.md
+
+# Development files
+.vscode/
+.idea/
+*.log
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+main
+
+# Test files
+*_test.go
+test/
+tests/
+
+# Documentation
+docs/
+
+# Local development
+.env
+.env.local
+
+# Kubernetes files
+k8s-*.yaml
+*.yaml
+*.yml
+
+# Cache and temporary files
+.cache/
+tmp/
+temp/

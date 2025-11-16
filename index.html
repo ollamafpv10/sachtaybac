@@ -19,6 +19,50 @@
                 <p>Nhập thông tin đặt hàng và quản lý tồn kho</p>
             </div>
 
+            <!-- Search and Filter Controls -->
+            <div class="search-filter-container">
+                <div class="search-section">
+                    <div class="search-input-group">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            placeholder="Tìm kiếm theo tên sách..."
+                            class="search-input"
+                        />
+                        <button id="clear-search-btn" class="clear-btn" title="Xóa tìm kiếm">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <label class="filter-label">Lọc theo giá:</label>
+                    <div class="price-filter-group">
+                        <input 
+                            type="number" 
+                            id="min-price" 
+                            placeholder="Giá từ"
+                            class="price-input"
+                        />
+                        <span class="price-separator">—</span>
+                        <input 
+                            type="number" 
+                            id="max-price" 
+                            placeholder="Giá đến"
+                            class="price-input"
+                        />
+                        <button id="clear-filter-btn" class="clear-filter-btn" title="Xóa bộ lọc">
+                            <i data-lucide="filter-x"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-results">
+                    <span id="filter-results-text">Hiển thị tất cả sách</span>
+                </div>
+            </div>
+
             <!-- Toolbar -->
             <div class="toolbar">
                 <button id="add-row-btn" class="btn btn-green">
@@ -35,7 +79,7 @@
                 </button>
                 <button id="add-lan-btn" class="btn btn-blue">
                     <i data-lucide="plus"></i>
-                    Thêm cột lần mới
+                    Thêm cột lần nhập mới
                 </button>
             </div>
 

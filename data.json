@@ -17,20 +17,36 @@
       "traLai": "4"
     },
     {
-      "ghiChu": "555",
-      "giaMoi": "67000",
-      "id": 2,
-      "lan1": "6",
-      "lan2": "5",
+      "ghiChu": "",
+      "giaMoi": "5555",
+      "id": 3,
+      "lan1": "3",
+      "lan2": "4",
       "lan3": "5",
-      "lan4": "5",
+      "lan4": "6",
       "lan5": "",
       "lan6": "",
-      "mang": "Ngoại ngữ",
-      "stt": 2,
-      "tanKho": "30",
-      "tenSach": "sach tieng viet 2",
-      "traLai": "4"
+      "mang": "",
+      "stt": 3,
+      "tanKho": "2",
+      "tenSach": "kltl",
+      "traLai": "10"
+    },
+    {
+      "ghiChu": "",
+      "giaMoi": "2700",
+      "id": 4,
+      "lan1": "10",
+      "lan2": "23",
+      "lan3": "4",
+      "lan4": "",
+      "lan5": "",
+      "lan6": "3",
+      "mang": "",
+      "stt": 4,
+      "tanKho": "10",
+      "tenSach": "sáh toán 2",
+      "traLai": "25"
     }
   ],
   "lanColumns": [
@@ -41,5 +57,5 @@
     "lan5",
     "lan6"
   ],
-  "lastUpdated": "2025-11-14T23:30:17+07:00"
+  "lastUpdated": "2025-11-16T20:03:20+07:00"
 }

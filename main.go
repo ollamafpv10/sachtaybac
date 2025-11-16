@@ -120,7 +120,8 @@ type AppData struct {
 	LastUpdated string   `json:"lastUpdated"`
 }
 
-const dataFile = "data.json"
+const dataDir = "./data"
+const dataFile = "./data/data.json"
 const port = ":3000"
 
 // CORS middleware
@@ -173,6 +174,11 @@ func syncBooksWithLanColumns(data *AppData) {
 // Load data from JSON file
 func loadData() (*AppData, error) {
 	var data AppData
+
+	// Ensure data directory exists
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create data directory: %v", err)
+	}
 
 	if _, err := os.Stat(dataFile); os.IsNotExist(err) {
 		// Create default data if file doesn't exist

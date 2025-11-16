@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sachtaybac-ingress
+  namespace: sachtaybac
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Optional: for SSL certificates
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - sachtaybac.yourdomain.com  # Replace with your domain
+    secretName: sachtaybac-tls
+  rules:
+  - host: sachtaybac.yourdomain.com  # Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sachtaybac-service
+            port:
+              number: 80
