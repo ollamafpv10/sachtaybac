@@ -1,29 +1,24 @@
 # Multi-stage build for optimized production image
 FROM golang:1.21-alpine AS builder
 
-# Install git (required for some Go modules)
+# Install git and ca-certificates
 RUN apk add --no-cache git ca-certificates
 
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files first for better caching
-COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
-
-# Copy source code
+# Copy all source files
 COPY . .
 
-# Build the application with optimizations
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o main .
+# Initialize Go modules and build
+RUN go mod tidy && \
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o main .
 
 # Production stage with minimal alpine image
 FROM alpine:3.18
 
-# Install ca-certificates for HTTPS requests (if needed)
-RUN apk --no-cache add ca-certificates tzdata
+# Install ca-certificates for HTTPS requests and wget for health checks
+RUN apk --no-cache add ca-certificates tzdata wget
 
 # Create non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -35,9 +30,9 @@ WORKDIR /app
 COPY --from=builder /app/main .
 
 # Copy static files (HTML, CSS, JS)
-COPY --from=builder /app/*.html .
-COPY --from=builder /app/*.css .
-COPY --from=builder /app/*.js .
+COPY --from=builder /app/*.html ./
+COPY --from=builder /app/*.css ./
+COPY --from=builder /app/*.js ./
 
 # Create data directory and set permissions
 RUN mkdir -p /app/data && chown -R appuser:appgroup /app

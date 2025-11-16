@@ -1,6 +1,3 @@
-module quan-ly-sach
+module sachtaybac
 
 go 1.21
-
-require (
-)
