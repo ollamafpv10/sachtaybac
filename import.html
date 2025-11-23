@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Excel - Quản Lý Sách</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- SheetJS for Excel import -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        .import-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .upload-area {
+            border: 3px dashed #3b82f6;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            background: #f0f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-area:hover {
+            background: #e0f2fe;
+            border-color: #2563eb;
+        }
+        
+        .upload-area.dragover {
+            background: #dbeafe;
+            border-color: #1d4ed8;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .preview-section {
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .preview-section.active {
+            display: block;
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        .preview-table th {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .preview-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+        
+        .btn-import {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-import:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .error-message.active {
+            display: block;
+        }
+        
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #15803d;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .success-message.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-gray-50 p-4">
+        <div class="max-w-full mx-auto bg-white rounded-lg shadow-lg">
+            <!-- Header -->
+            <div class="header">
+                <h1>Import Dữ Liệu Từ Excel</h1>
+                <p>Tải lên file Excel để import dữ liệu sách vào hệ thống</p>
+            </div>
+
+            <div class="import-container">
+                <!-- Publisher Selection -->
+                <div style="margin-bottom: 2rem; padding: 1.5rem; background: #f0f9ff; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                    <h3 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 18px;">
+                        <i data-lucide="building" style="width: 20px; height: 20px; vertical-align: middle;"></i>
+                        Chọn Hãng Sách Mặc Định
+                    </h3>
+                    <select id="defaultHangSach" class="form-input" style="width: 100%; max-width: 400px; padding: 0.75rem; font-size: 16px; border: 2px solid #3b82f6;">
+                        <option value="">Không tự động chọn</option>
+                        <option value="Miền Bắc">Miền Bắc</option>
+                        <option value="Cánh Diều">Cánh Diều</option>
+                        <option value="ĐTP">ĐTP</option>
+                        <option value="Tin Vinh">Tin Vinh</option>
+                        <option value="ATGT">ATGT</option>
+                        <option value="STEM Đà Nẵng">STEM Đà Nẵng</option>
+                        <option value="Đầu tư và xuất bản">Đầu tư và xuất bản</option>
+                    </select>
+                    <p style="color: #6b7280; margin-top: 0.5rem; font-size: 14px;">
+                        Nếu chọn hãng sách, tất cả dữ liệu import sẽ được gán hãng sách này (trừ khi file Excel đã có dữ liệu ở cột HÃNG SÁCH)
+                    </p>
+                </div>
+
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i data-lucide="upload-cloud" style="width: 64px; height: 64px;"></i>
+                    </div>
+                    <h2>Kéo thả file Excel vào đây</h2>
+                    <p style="color: #6b7280; margin: 1rem 0;">hoặc</p>
+                    <button class="btn btn-blue" onclick="document.getElementById('fileInput').click()">
+                        <i data-lucide="file-plus"></i>
+                        Chọn File
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+                    <p style="color: #9ca3af; margin-top: 1rem; font-size: 14px;">
+                        Hỗ trợ: Excel (.xlsx, .xls), CSV (.csv)
+                    </p>
+                </div>
+
+                <!-- Error Message -->
+                <div class="error-message" id="errorMessage"></div>
+
+                <!-- Success Message -->
+                <div class="success-message" id="successMessage"></div>
+
+                <!-- Preview Section -->
+                <div class="preview-section" id="previewSection">
+                    <h2>Xem trước dữ liệu</h2>
+                    
+                    <div class="stats" id="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Tổng số dòng</span>
+                            <span class="stat-value" id="totalRows">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Cột được nhận diện</span>
+                            <span class="stat-value" id="totalColumns">0</span>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto; margin-top: 1.5rem;">
+                        <table class="preview-table" id="previewTable">
+                            <thead id="previewTableHead"></thead>
+                            <tbody id="previewTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-cancel" onclick="cancelImport()">
+                            <i data-lucide="x"></i>
+                            Hủy
+                        </button>
+                        <button class="btn-import" onclick="importData()">
+                            <i data-lucide="check"></i>
+                            Import Dữ Liệu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let importedData = [];
+        let detectedColumns = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+            setupDragAndDrop();
+            setupFileInput();
+            
+            // Add change listener to publisher selection
+            document.getElementById('defaultHangSach').addEventListener('change', function() {
+                // If data is already loaded, re-process with new selection
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput.files.length > 0 && importedData.length > 0) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+        });
+
+        // Setup drag and drop
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+        }
+
+        // Setup file input
+        function setupFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
+
+        // Handle file upload
+        function handleFile(file) {
+            hideMessages();
+            
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls') && !fileName.endsWith('.csv')) {
+                showError('Vui lòng chọn file Excel (.xlsx, .xls) hoặc CSV (.csv)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    processExcelData(jsonData);
+                } catch (error) {
+                    showError('Lỗi đọc file: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Process Excel data
+        function processExcelData(jsonData) {
+            if (jsonData.length < 2) {
+                showError('File không có dữ liệu hoặc thiếu header');
+                return;
+            }
+
+            const headers = jsonData[0];
+            const rows = jsonData.slice(1);
+            
+            // Get default publisher selection
+            const defaultHangSach = document.getElementById('defaultHangSach').value;
+
+            // Map column names
+            const columnMapping = {
+                'STT': 'stt',
+                'TÊN SÁCH': 'tenSach',
+                'HÃNG SÁCH': 'hangSach',
+                'GIÁ MỚI': 'giaMoi',
+                'MẢNG': 'mang',
+                'Tồn kho': 'tanKho',
+                'Trả lại, huỷ đơn hàng': 'traLai',
+                'Ghi chú': 'ghiChu'
+            };
+
+            // Detect columns
+            detectedColumns = [];
+            const columnIndexes = {};
+            
+            headers.forEach((header, index) => {
+                const normalizedHeader = header.trim();
+                if (columnMapping[normalizedHeader]) {
+                    columnIndexes[columnMapping[normalizedHeader]] = index;
+                    detectedColumns.push(normalizedHeader);
+                } else if (normalizedHeader.startsWith('Lần ')) {
+                    const lanNum = normalizedHeader.replace('Lần ', '').trim();
+                    const lanKey = 'lan' + lanNum;
+                    columnIndexes[lanKey] = index;
+                    detectedColumns.push(normalizedHeader);
+                }
+            });
+
+            // Convert rows to objects
+            importedData = [];
+            let id = 1;
+            
+            rows.forEach(row => {
+                if (!row || row.length === 0 || !row.some(cell => cell)) {
+                    return; // Skip empty rows
+                }
+
+                const book = {
+                    id: id++,
+                    stt: row[columnIndexes.stt] || '',
+                    tenSach: row[columnIndexes.tenSach] || '',
+                    hangSach: row[columnIndexes.hangSach] || defaultHangSach || '',
+                    giaMoi: row[columnIndexes.giaMoi] || '',
+                    mang: row[columnIndexes.mang] || '',
+                    tanKho: row[columnIndexes.tanKho] || '',
+                    traLai: row[columnIndexes.traLai] || '',
+                    ghiChu: row[columnIndexes.ghiChu] || ''
+                };
+
+                // Add lan columns
+                Object.keys(columnIndexes).forEach(key => {
+                    if (key.startsWith('lan')) {
+                        book[key] = row[columnIndexes[key]] || '';
+                    }
+                });
+
+                importedData.push(book);
+            });
+
+            displayPreview();
+        }
+
+        // Display preview
+        function displayPreview() {
+            if (importedData.length === 0) {
+                showError('Không có dữ liệu hợp lệ để import');
+                return;
+            }
+
+            // Update stats
+            document.getElementById('totalRows').textContent = importedData.length;
+            document.getElementById('totalColumns').textContent = detectedColumns.length;
+
+            // Create table header
+            const thead = document.getElementById('previewTableHead');
+            let headerHTML = '<tr>';
+            headerHTML += '<th>STT</th>';
+            headerHTML += '<th>Tên Sách</th>';
+            headerHTML += '<th>Hãng Sách</th>';
+            headerHTML += '<th>Giá Mới</th>';
+            headerHTML += '<th>Mảng</th>';
+            
+            // Add lan columns
+            const lanColumns = Object.keys(importedData[0]).filter(key => key.startsWith('lan')).sort();
+            lanColumns.forEach((col, idx) => {
+                headerHTML += `<th>Lần ${idx + 1}</th>`;
+            });
+            
+            headerHTML += '<th>Ghi Chú</th>';
+            headerHTML += '</tr>';
+            thead.innerHTML = headerHTML;
+
+            // Create table body (show first 10 rows)
+            const tbody = document.getElementById('previewTableBody');
+            const displayRows = importedData.slice(0, 10);
+            
+            let bodyHTML = '';
+            displayRows.forEach(book => {
+                bodyHTML += '<tr>';
+                bodyHTML += `<td>${book.stt}</td>`;
+                bodyHTML += `<td>${book.tenSach}</td>`;
+                bodyHTML += `<td>${book.hangSach}</td>`;
+                bodyHTML += `<td>${book.giaMoi}</td>`;
+                bodyHTML += `<td>${book.mang}</td>`;
+                
+                lanColumns.forEach(col => {
+                    bodyHTML += `<td>${book[col] || ''}</td>`;
+                });
+                
+                bodyHTML += `<td>${book.ghiChu}</td>`;
+                bodyHTML += '</tr>';
+            });
+            
+            if (importedData.length > 10) {
+                bodyHTML += `<tr><td colspan="100" style="text-align: center; color: #6b7280; font-style: italic;">... và ${importedData.length - 10} dòng khác</td></tr>`;
+            }
+            
+            tbody.innerHTML = bodyHTML;
+
+            // Show preview section
+            document.getElementById('previewSection').classList.add('active');
+            lucide.createIcons();
+        }
+
+        // Import data to system
+        function importData() {
+            if (importedData.length === 0) {
+                showError('Không có dữ liệu để import');
+                return;
+            }
+
+            // Get lan columns from imported data
+            const lanColumns = Object.keys(importedData[0])
+                .filter(key => key.startsWith('lan'))
+                .sort();
+
+            const dataToSave = {
+                books: importedData,
+                lanColumns: lanColumns
+            };
+
+            // Send to server
+            fetch('/api/data/row', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dataToSave)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess(`Import thành công ${importedData.length} dòng dữ liệu!`);
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showError('Lỗi import: ' + (data.error || 'Không thể lưu dữ liệu'));
+                }
+            })
+            .catch(error => {
+                showError('Lỗi kết nối server: ' + error.message);
+            });
+        }
+
+        // Cancel import
+        function cancelImport() {
+            importedData = [];
+            detectedColumns = [];
+            document.getElementById('previewSection').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+            hideMessages();
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.classList.add('active');
+        }
+
+        // Hide messages
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('successMessage').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

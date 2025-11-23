@@ -13,29 +13,31 @@ import (
 
 // Data structures
 type Book struct {
-	ID      int    `json:"id"`
-	STT     int    `json:"stt"`
-	TenSach string `json:"tenSach"`
-	GiaMoi  string `json:"giaMoi"`
-	Mang    string `json:"mang"`
-	TanKho  string `json:"tanKho"`
-	TraLai  string `json:"traLai"`
-	GhiChu  string `json:"ghiChu"`
+	ID       int    `json:"id"`
+	STT      int    `json:"stt"`
+	TenSach  string `json:"tenSach"`
+	HangSach string `json:"hangSach"`
+	GiaMoi   string `json:"giaMoi"`
+	Mang     string `json:"mang"`
+	TanKho   string `json:"tanKho"`
+	TraLai   string `json:"traLai"`
+	GhiChu   string `json:"ghiChu"`
 	// Sử dụng map để lưu các cột lần động
 	LanData map[string]string `json:"-"` // Không serialize trực tiếp
 }
 
 // Custom JSON marshaling để hỗ trợ các cột lần động
 type BookJSON struct {
-	ID      int               `json:"id"`
-	STT     int               `json:"stt"`
-	TenSach string            `json:"tenSach"`
-	GiaMoi  string            `json:"giaMoi"`
-	Mang    string            `json:"mang"`
-	TanKho  string            `json:"tanKho"`
-	TraLai  string            `json:"traLai"`
-	GhiChu  string            `json:"ghiChu"`
-	LanData map[string]string `json:"-"`
+	ID       int               `json:"id"`
+	STT      int               `json:"stt"`
+	TenSach  string            `json:"tenSach"`
+	HangSach string            `json:"hangSach"`
+	GiaMoi   string            `json:"giaMoi"`
+	Mang     string            `json:"mang"`
+	TanKho   string            `json:"tanKho"`
+	TraLai   string            `json:"traLai"`
+	GhiChu   string            `json:"ghiChu"`
+	LanData  map[string]string `json:"-"`
 }
 
 // MarshalJSON implements custom JSON marshaling
@@ -47,6 +49,7 @@ func (b Book) MarshalJSON() ([]byte, error) {
 	result["id"] = b.ID
 	result["stt"] = b.STT
 	result["tenSach"] = b.TenSach
+	result["hangSach"] = b.HangSach
 	result["giaMoi"] = b.GiaMoi
 	result["mang"] = b.Mang
 	result["tanKho"] = b.TanKho
@@ -82,6 +85,9 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 	}
 	if tenSach, ok := raw["tenSach"].(string); ok {
 		b.TenSach = tenSach
+	}
+	if hangSach, ok := raw["hangSach"].(string); ok {
+		b.HangSach = hangSach
 	}
 	if giaMoi, ok := raw["giaMoi"].(string); ok {
 		b.GiaMoi = giaMoi

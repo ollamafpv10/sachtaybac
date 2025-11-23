@@ -1,0 +1,2 @@
+-tạo file data.json trong thư mục của máy chính rồi set quyền 777 cho file data.json
+-> xoá pod cho nó redeploy lại

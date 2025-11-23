@@ -249,6 +249,15 @@ body {
     background-color: #1d4ed8;
 }
 
+.btn-orange {
+    background-color: #ea580c;
+    color: white;
+}
+
+.btn-orange:hover {
+    background-color: #c2410c;
+}
+
 .btn-purple {
     background-color: #7c3aed;
     color: white;

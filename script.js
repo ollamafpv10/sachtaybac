@@ -16,11 +16,23 @@ const mangOptions = [
     'Sách thiếu nhi'
 ];
 
+// Các lựa chọn cho cột hãng sách
+const hangSachOptions = [
+    'Miền Bắc',
+    'Cánh Diều',
+    'ĐTP',
+    'Tin Vinh',
+    'ATGT',
+    'STEM Đà Nẵng',
+    'Đầu tư và xuất bản'
+];
+
 let books = [
     { 
         id: 1, 
         stt: 1, 
         tenSach: '', 
+        hangSach: '',
         giaMoi: '', 
         mang: '', 
         tanKho: '', 
@@ -177,6 +189,7 @@ function addRow() {
         id: newId,
         stt: newId,
         tenSach: '',
+        hangSach: '',
         giaMoi: '',
         mang: '',
         tanKho: '',
@@ -245,6 +258,12 @@ function updateField(id, field, value) {
         return;
     }
     
+    // Nếu là cột hãng sách và chọn "Khác", render lại bảng để hiện input tùy chỉnh
+    if (field === 'hangSach' && value === 'custom') {
+        renderTable();
+        return;
+    }
+    
     // Reapply filters to update the displayed data
     applyFilters();
     updateCalculatedFields();
@@ -302,6 +321,7 @@ function createTableHeader() {
         <tr class="table-header">
             <th class="sticky-left">STT</th>
             <th>TÊN SÁCH</th>
+            <th>HÃNG SÁCH</th>
             <th>GIÁ MỚI</th>
             <th>MẢNG</th>
             <th>Tồn kho</th>
@@ -332,7 +352,7 @@ function createTableRow(book, index) {
                     onchange="updateField(${book.id}, '${col}', this.value)"
                     placeholder="0"
                     class="form-input"
-                    tabindex="${tabIndex + 5 + lanColumns.indexOf(col)}"
+                    tabindex="${tabIndex + 6 + lanColumns.indexOf(col)}"
                 />
             </td>
         `;
@@ -360,20 +380,54 @@ function createTableRow(book, index) {
                 />
             </td>
             <td>
+                <select 
+                    onchange="handleHangSachChange(${book.id}, this.value)"
+                    class="form-input"
+                    tabindex="${tabIndex + 2}"
+                >
+                    <option value="">Chọn hãng sách...</option>
+                    ${hangSachOptions.map(option => 
+                        `<option value="${option}" ${book.hangSach === option ? 'selected' : ''}>${option}</option>`
+                    ).join('')}
+                    <option value="custom" ${!hangSachOptions.includes(book.hangSach) && book.hangSach && book.hangSach !== '' ? 'selected' : ''}>Khác...</option>
+                </select>
+                ${!hangSachOptions.includes(book.hangSach) && book.hangSach && book.hangSach !== '' && book.hangSach !== 'custom' ? 
+                    `<input 
+                        type="text" 
+                        value="${book.hangSach}" 
+                        onchange="updateField(${book.id}, 'hangSach', this.value)"
+                        placeholder="Nhập hãng sách..."
+                        class="form-input" 
+                        style="margin-top: 0.25rem;"
+                        tabindex="${tabIndex + 2}"
+                    />` : 
+                    (book.hangSach === 'custom' ? 
+                    `<input 
+                        type="text" 
+                        value="" 
+                        onchange="updateField(${book.id}, 'hangSach', this.value)"
+                        placeholder="Nhập hãng sách..."
+                        class="form-input" 
+                        style="margin-top: 0.25rem;"
+                        tabindex="${tabIndex + 2}"
+                        autofocus
+                    />` : '')}
+            </td>
+            <td>
                 <input 
                     type="text" 
                     value="${book.giaMoi}" 
                     onchange="updateField(${book.id}, 'giaMoi', this.value)"
                     placeholder="0"
                     class="form-input"
-                    tabindex="${tabIndex + 2}"
+                    tabindex="${tabIndex + 3}"
                 />
             </td>
             <td>
                 <select 
                     onchange="handleMangChange(${book.id}, this.value)"
                     class="form-input"
-                    tabindex="${tabIndex + 3}"
+                    tabindex="${tabIndex + 4}"
                 >
                     <option value="">Đại loại...</option>
                     ${mangOptions.map(option => 
@@ -389,7 +443,7 @@ function createTableRow(book, index) {
                         placeholder="Nhập đại loại..."
                         class="form-input" 
                         style="margin-top: 0.25rem;"
-                        tabindex="${tabIndex + 3}"
+                        tabindex="${tabIndex + 4}"
                     />` : 
                     (book.mang === 'custom' ? 
                     `<input 
@@ -399,7 +453,7 @@ function createTableRow(book, index) {
                         placeholder="Nhập đại loại..."
                         class="form-input" 
                         style="margin-top: 0.25rem;"
-                        tabindex="${tabIndex + 3}"
+                        tabindex="${tabIndex + 4}"
                         autofocus
                     />` : '')}
             </td>
@@ -410,7 +464,7 @@ function createTableRow(book, index) {
                     onchange="updateField(${book.id}, 'tanKho', this.value)"
                     placeholder="0"
                     class="form-input"
-                    tabindex="${tabIndex + 4}"
+                    tabindex="${tabIndex + 5}"
                 />
             </td>
             <td style="background-color: #fffbeb;">
@@ -426,7 +480,7 @@ function createTableRow(book, index) {
                     onchange="updateField(${book.id}, 'traLai', this.value)"
                     placeholder="0"
                     class="form-input"
-                    tabindex="${tabIndex + 5 + lanColumns.length}"
+                    tabindex="${tabIndex + 6 + lanColumns.length}"
                 />
             </td>
             <td style="background-color: #f0fdf4;">
@@ -441,7 +495,7 @@ function createTableRow(book, index) {
                     onchange="updateField(${book.id}, 'ghiChu', this.value)"
                     placeholder="Ghi chú..."
                     class="form-input"
-                    tabindex="${tabIndex + 6 + lanColumns.length}"
+                    tabindex="${tabIndex + 7 + lanColumns.length}"
                 />
             </td>
             <td class="save-column" style="text-align: center;">
@@ -449,7 +503,7 @@ function createTableRow(book, index) {
                     onclick="saveRowToJson(${book.id})"
                     class="save-row-btn"
                     title="Lưu dòng này vào data.json"
-                    tabindex="${tabIndex + 7 + lanColumns.length}"
+                    tabindex="${tabIndex + 8 + lanColumns.length}"
                 >
                     <i data-lucide="save"></i>
                 </button>
@@ -460,7 +514,7 @@ function createTableRow(book, index) {
                     ${books.length === 1 ? 'disabled' : ''}
                     class="delete-btn"
                     title="Xóa dòng"
-                    tabindex="${tabIndex + 8 + lanColumns.length}"
+                    tabindex="${tabIndex + 9 + lanColumns.length}"
                 >
                     <i data-lucide="trash-2"></i>
                 </button>
@@ -484,7 +538,7 @@ function renderTable() {
 
 // Export data to Excel
 function exportToExcel() {
-    const headers = ['STT', 'TÊN SÁCH', 'GIÁ MỚI', 'MẢNG', 'Tồn kho', 'Tổng đặt mới'];
+    const headers = ['STT', 'TÊN SÁCH', 'HÃNG SÁCH', 'GIÁ MỚI', 'MẢNG', 'Tồn kho', 'Tổng đặt mới'];
     
     lanColumns.forEach((col, idx) => {
         headers.push('Lần ' + (idx + 1));
@@ -497,6 +551,7 @@ function exportToExcel() {
         let row = [
             book.stt,
             book.tenSach,
+            book.hangSach || '',
             book.giaMoi,
             book.mang,
             book.tanKho,
@@ -524,6 +579,7 @@ function exportToExcel() {
     const colWidths = [
         {wch: 5},   // STT
         {wch: 30},  // TÊN SÁCH
+        {wch: 20},  // HÃNG SÁCH
         {wch: 12},  // GIÁ MỚI
         {wch: 15},  // MẢNG
         {wch: 10},  // Tồn kho
@@ -563,6 +619,15 @@ function handleMangChange(id, value) {
         updateField(id, 'mang', 'custom');
     } else {
         updateField(id, 'mang', value);
+    }
+}
+
+// Xử lý thay đổi dropdown hãng sách
+function handleHangSachChange(id, value) {
+    if (value === 'custom') {
+        updateField(id, 'hangSach', 'custom');
+    } else {
+        updateField(id, 'hangSach', value);
     }
 }
 
@@ -680,6 +745,7 @@ window.addRow = addRow;
 window.deleteRow = deleteRow;
 window.updateField = updateField;
 window.handleMangChange = handleMangChange;
+window.handleHangSachChange = handleHangSachChange;
 window.addLanColumn = addLanColumn;
 window.deleteLanColumn = deleteLanColumn;
 window.saveRowToJson = saveRowToJson;
