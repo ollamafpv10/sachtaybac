@@ -363,7 +363,7 @@
             // Get default publisher selection
             const defaultHangSach = document.getElementById('defaultHangSach').value;
 
-            // Map column names
+            // Map column names (case-insensitive)
             const columnMapping = {
                 'STT': 'stt',
                 'TÊN SÁCH': 'tenSach',
@@ -374,6 +374,12 @@
                 'Trả lại, huỷ đơn hàng': 'traLai',
                 'Ghi chú': 'ghiChu'
             };
+            
+            // Create case-insensitive mapping
+            const lowerCaseMapping = {};
+            Object.keys(columnMapping).forEach(key => {
+                lowerCaseMapping[key.toLowerCase()] = columnMapping[key];
+            });
 
             // Detect columns
             detectedColumns = [];
@@ -381,11 +387,21 @@
             
             headers.forEach((header, index) => {
                 const normalizedHeader = header.trim();
+                const lowerHeader = normalizedHeader.toLowerCase();
+                
+                // Try exact match first
                 if (columnMapping[normalizedHeader]) {
                     columnIndexes[columnMapping[normalizedHeader]] = index;
                     detectedColumns.push(normalizedHeader);
-                } else if (normalizedHeader.startsWith('Lần ')) {
-                    const lanNum = normalizedHeader.replace('Lần ', '').trim();
+                } 
+                // Try case-insensitive match
+                else if (lowerCaseMapping[lowerHeader]) {
+                    columnIndexes[lowerCaseMapping[lowerHeader]] = index;
+                    detectedColumns.push(normalizedHeader);
+                }
+                // Check for lan columns
+                else if (normalizedHeader.startsWith('Lần ') || lowerHeader.startsWith('lần ')) {
+                    const lanNum = normalizedHeader.replace(/Lần /i, '').trim();
                     const lanKey = 'lan' + lanNum;
                     columnIndexes[lanKey] = index;
                     detectedColumns.push(normalizedHeader);
@@ -397,26 +413,45 @@
             let id = 1;
             
             rows.forEach(row => {
-                if (!row || row.length === 0 || !row.some(cell => cell)) {
-                    return; // Skip empty rows
+                // Skip completely empty rows
+                if (!row || row.length === 0) {
+                    return;
                 }
+                
+                // Skip rows where all cells are empty/null/undefined
+                const hasData = row.some(cell => {
+                    if (cell === null || cell === undefined || cell === '') return false;
+                    // Also check for whitespace-only strings
+                    if (typeof cell === 'string' && cell.trim() === '') return false;
+                    return true;
+                });
+                
+                if (!hasData) {
+                    return; // Skip this row
+                }
+
+                // Helper function to convert value to string
+                const toString = (val) => {
+                    if (val === null || val === undefined) return '';
+                    return String(val);
+                };
 
                 const book = {
                     id: id++,
-                    stt: row[columnIndexes.stt] || '',
-                    tenSach: row[columnIndexes.tenSach] || '',
-                    hangSach: row[columnIndexes.hangSach] || defaultHangSach || '',
-                    giaMoi: row[columnIndexes.giaMoi] || '',
-                    mang: row[columnIndexes.mang] || '',
-                    tanKho: row[columnIndexes.tanKho] || '',
-                    traLai: row[columnIndexes.traLai] || '',
-                    ghiChu: row[columnIndexes.ghiChu] || ''
+                    stt: toString(row[columnIndexes.stt]),
+                    tenSach: toString(row[columnIndexes.tenSach]),
+                    hangSach: toString(row[columnIndexes.hangSach] || defaultHangSach),
+                    giaMoi: toString(row[columnIndexes.giaMoi]),
+                    mang: toString(row[columnIndexes.mang]),
+                    tanKho: toString(row[columnIndexes.tanKho]),
+                    traLai: toString(row[columnIndexes.traLai]),
+                    ghiChu: toString(row[columnIndexes.ghiChu])
                 };
 
                 // Add lan columns
                 Object.keys(columnIndexes).forEach(key => {
                     if (key.startsWith('lan')) {
-                        book[key] = row[columnIndexes[key]] || '';
+                        book[key] = toString(row[columnIndexes[key]]);
                     }
                 });
 
@@ -506,7 +541,7 @@
             };
 
             // Send to server
-            fetch('/api/data/row', {
+            fetch('/api/data/import', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

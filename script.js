@@ -4,16 +4,10 @@ let lanColumns = ['lan1', 'lan2'];
 
 // Các lựa chọn cho cột mảng
 const mangOptions = [
-    'Giáo khoa',
-    'Tham khảo',
-    'Tiểu thuyết',
-    'Khoa học',
-    'Lịch sử',
-    'Văn học',
-    'Ngoại ngữ',
-    'Công nghệ',
-    'Kinh tế',
-    'Sách thiếu nhi'
+    'SBT',
+    'SGK',
+    'SGV',
+    'STK'
 ];
 
 // Các lựa chọn cho cột hãng sách
@@ -252,12 +246,6 @@ function updateField(id, field, value) {
         book.id === id ? { ...book, [field]: value } : book
     );
     
-    // Nếu là cột mảng và chọn "Khác", render lại bảng để hiện input tùy chỉnh
-    if (field === 'mang' && value === 'custom') {
-        renderTable();
-        return;
-    }
-    
     // Nếu là cột hãng sách và chọn "Khác", render lại bảng để hiện input tùy chỉnh
     if (field === 'hangSach' && value === 'custom') {
         renderTable();
@@ -424,38 +412,20 @@ function createTableRow(book, index) {
                 />
             </td>
             <td>
-                <select 
-                    onchange="handleMangChange(${book.id}, this.value)"
+                <input 
+                    type="text" 
+                    list="mang-options-${book.id}"
+                    value="${book.mang}" 
+                    onchange="updateField(${book.id}, 'mang', this.value)"
+                    placeholder="Chọn hoặc nhập mảng..."
                     class="form-input"
                     tabindex="${tabIndex + 4}"
-                >
-                    <option value="">Đại loại...</option>
+                />
+                <datalist id="mang-options-${book.id}">
                     ${mangOptions.map(option => 
-                        `<option value="${option}" ${book.mang === option ? 'selected' : ''}>${option}</option>`
+                        `<option value="${option}">${option}</option>`
                     ).join('')}
-                    <option value="custom" ${!mangOptions.includes(book.mang) && book.mang && book.mang !== '' ? 'selected' : ''}>Khác...</option>
-                </select>
-                ${!mangOptions.includes(book.mang) && book.mang && book.mang !== '' && book.mang !== 'custom' ? 
-                    `<input 
-                        type="text" 
-                        value="${book.mang}" 
-                        onchange="updateField(${book.id}, 'mang', this.value)"
-                        placeholder="Nhập đại loại..."
-                        class="form-input" 
-                        style="margin-top: 0.25rem;"
-                        tabindex="${tabIndex + 4}"
-                    />` : 
-                    (book.mang === 'custom' ? 
-                    `<input 
-                        type="text" 
-                        value="" 
-                        onchange="updateField(${book.id}, 'mang', this.value)"
-                        placeholder="Nhập đại loại..."
-                        class="form-input" 
-                        style="margin-top: 0.25rem;"
-                        tabindex="${tabIndex + 4}"
-                        autofocus
-                    />` : '')}
+                </datalist>
             </td>
             <td>
                 <input 

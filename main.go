@@ -323,6 +323,73 @@ func saveRowHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// Import handler - append new books to existing data
+func importBooksHandler(w http.ResponseWriter, r *http.Request) {
+	var newData AppData
+	err := json.NewDecoder(r.Body).Decode(&newData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Lỗi decode JSON: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	// Load current data
+	currentData, err := loadData()
+	if err != nil {
+		currentData = &AppData{
+			Books:      []Book{},
+			LanColumns: []string{"lan1", "lan2"},
+		}
+	}
+
+	// Find max ID in current data
+	maxID := 0
+	for _, book := range currentData.Books {
+		if book.ID > maxID {
+			maxID = book.ID
+		}
+	}
+
+	// Append new books with updated IDs
+	for i := range newData.Books {
+		maxID++
+		newData.Books[i].ID = maxID
+		currentData.Books = append(currentData.Books, newData.Books[i])
+	}
+
+	// Merge lan columns (add any new ones)
+	if len(newData.LanColumns) > 0 {
+		// Create a map of existing lan columns
+		existingLanCols := make(map[string]bool)
+		for _, col := range currentData.LanColumns {
+			existingLanCols[col] = true
+		}
+
+		// Add new lan columns that don't exist
+		for _, col := range newData.LanColumns {
+			if !existingLanCols[col] {
+				currentData.LanColumns = append(currentData.LanColumns, col)
+			}
+		}
+	}
+
+	// Sync books with lan columns
+	syncBooksWithLanColumns(currentData)
+
+	err = saveData(currentData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Lỗi lưu dữ liệu import: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success": true,
+		"message": fmt.Sprintf("Import thành công %d sách!", len(newData.Books)),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 // Serve static files
 func serveStaticFiles() {
 	// Serve static files from current directory
@@ -356,6 +423,14 @@ func main() {
 	http.HandleFunc("/api/data/row", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			saveRowHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	http.HandleFunc("/api/data/import", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			importBooksHandler(w, r)
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
