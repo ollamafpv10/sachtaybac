@@ -275,6 +275,9 @@ body {
 /* Table */
 .table-container {
     overflow-x: auto;
+    max-height: calc(100vh - 400px);
+    overflow-y: auto;
+    position: relative;
 }
 
 .books-table {
@@ -285,6 +288,9 @@ body {
 .table-header {
     background-color: #f3f4f6;
     border-bottom: 2px solid #d1d5db;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .books-table th {
@@ -294,13 +300,26 @@ body {
     color: #374151;
     border: 1px solid #d1d5db;
     min-width: 100px;
+    background-color: #f3f4f6;
 }
 
 .books-table th:first-child {
-    min-width: 60px;
+    min-width: 80px;
+    width: 80px;
+    padding: 0.75rem;
+}
+
+.books-table td:first-child {
+    min-width: 80px;
+    width: 80px;
+    padding: 0.5rem;
 }
 
 .books-table th:nth-child(2) {
+    min-width: 250px;
+}
+
+.books-table td:nth-child(2) {
     min-width: 250px;
 }
 
@@ -337,7 +356,16 @@ body {
     position: sticky;
     left: 0;
     background-color: #f3f4f6;
-    z-index: 10;
+    z-index: 12;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sticky-left-2 {
+    position: sticky;
+    left: 80px;
+    background-color: #f3f4f6;
+    z-index: 11;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
 }
 
 .sticky-right {
@@ -345,6 +373,7 @@ body {
     right: 0;
     background-color: #f3f4f6;
     z-index: 10;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
 }
 
 .calculated-column {
@@ -375,7 +404,12 @@ body {
 
 .books-table .sticky-left {
     background: inherit;
-    z-index: 10;
+    z-index: 12;
+}
+
+.books-table .sticky-left-2 {
+    background: inherit;
+    z-index: 11;
 }
 
 .books-table .sticky-right {

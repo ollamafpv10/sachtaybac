@@ -308,7 +308,7 @@ function createTableHeader() {
     return `
         <tr class="table-header">
             <th class="sticky-left">STT</th>
-            <th>TÊN SÁCH</th>
+            <th class="sticky-left-2">TÊN SÁCH</th>
             <th>HÃNG SÁCH</th>
             <th>GIÁ MỚI</th>
             <th>MẢNG</th>
@@ -357,7 +357,7 @@ function createTableRow(book, index) {
                     tabindex="${tabIndex}"
                 />
             </td>
-            <td>
+            <td class="sticky-left-2">
                 <input 
                     type="text" 
                     value="${book.tenSach}" 
