@@ -1,6 +1,7 @@
 // Application state
 // Các cột động cho các lần đặt hàng
 let lanColumns = ['lan1', 'lan2'];
+let hangDaLenColumns = []; // Các cột hàng đã lên
 
 // Các lựa chọn cho cột mảng
 const mangOptions = [
@@ -50,6 +51,7 @@ const addRowBtn = document.getElementById('add-row-btn');
 const loadDataBtn = document.getElementById('load-data-btn');
 const exportExcelBtn = document.getElementById('export-excel-btn');
 const addLanBtn = document.getElementById('add-lan-btn');
+const addHangDaLenBtn = document.getElementById('add-hang-da-len-btn');
 const totalRowsSpan = document.getElementById('total-rows');
 const totalAmountSpan = document.getElementById('total-amount');
 
@@ -74,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDataBtn.addEventListener('click', loadDataFromServer);
     exportExcelBtn.addEventListener('click', exportToExcel);
     addLanBtn.addEventListener('click', addLanColumn);
+    addHangDaLenBtn.addEventListener('click', addHangDaLenColumn);
     
     // Search and filter event listeners
     searchInput.addEventListener('input', handleSearch);
@@ -207,7 +210,8 @@ function deleteRow(id) {
             // Lưu dữ liệu vào server sau khi xóa
             const dataToSave = {
                 books: books,
-                lanColumns: lanColumns
+                lanColumns: lanColumns,
+                hangDaLenColumns: hangDaLenColumns
             };
             
             fetch('/api/data/row', {
@@ -305,6 +309,20 @@ function createTableHeader() {
         `;
     });
     
+    let hangDaLenHeaders = '';
+    hangDaLenColumns.forEach((col, idx) => {
+        hangDaLenHeaders += `
+            <th>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span>Hàng đã lên ${idx + 1}</span>
+                    <button onclick="deleteHangDaLenColumn('${col}')" class="delete-column-btn" title="Xóa cột">
+                        <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                    </button>
+                </div>
+            </th>
+        `;
+    });
+    
     return `
         <tr class="table-header">
             <th class="sticky-left">STT</th>
@@ -315,6 +333,7 @@ function createTableHeader() {
             <th>Tồn kho</th>
             <th class="calculated-column">Tổng đặt mới</th>
             ${lanHeaders}
+            ${hangDaLenHeaders}
             <th>Trả lại, huỷ đơn hàng</th>
             <th class="calculated-column-green">Tổng phải đặt</th>
             <th>Ghi chú</th>
@@ -341,6 +360,22 @@ function createTableRow(book, index) {
                     placeholder="0"
                     class="form-input"
                     tabindex="${tabIndex + 6 + lanColumns.indexOf(col)}"
+                />
+            </td>
+        `;
+    });
+    
+    let hangDaLenInputs = '';
+    hangDaLenColumns.forEach(col => {
+        hangDaLenInputs += `
+            <td>
+                <input 
+                    type="number" 
+                    value="${book[col] || ''}" 
+                    onchange="updateField(${book.id}, '${col}', this.value)"
+                    placeholder="0"
+                    class="form-input"
+                    tabindex="${tabIndex + 6 + lanColumns.length + hangDaLenColumns.indexOf(col)}"
                 />
             </td>
         `;
@@ -443,6 +478,7 @@ function createTableRow(book, index) {
                 </div>
             </td>
             ${lanInputs}
+            ${hangDaLenInputs}
             <td>
                 <input 
                     type="number" 
@@ -450,7 +486,7 @@ function createTableRow(book, index) {
                     onchange="updateField(${book.id}, 'traLai', this.value)"
                     placeholder="0"
                     class="form-input"
-                    tabindex="${tabIndex + 6 + lanColumns.length}"
+                    tabindex="${tabIndex + 6 + lanColumns.length + hangDaLenColumns.length}"
                 />
             </td>
             <td style="background-color: #f0fdf4;">
@@ -514,6 +550,10 @@ function exportToExcel() {
         headers.push('Lần ' + (idx + 1));
     });
     
+    hangDaLenColumns.forEach((col, idx) => {
+        headers.push('Hàng đã lên ' + (idx + 1));
+    });
+    
     headers.push('Trả lại, huỷ đơn hàng', 'Tổng phải đặt', 'Ghi chú');
     
     // Use filtered books for export
@@ -529,6 +569,10 @@ function exportToExcel() {
         ];
         
         lanColumns.forEach(col => {
+            row.push(book[col] || '');
+        });
+        
+        hangDaLenColumns.forEach(col => {
             row.push(book[col] || '');
         });
         
@@ -559,6 +603,11 @@ function exportToExcel() {
     // Thêm độ rộng cho các cột lần
     lanColumns.forEach(() => {
         colWidths.push({wch: 8});
+    });
+    
+    // Thêm độ rộng cho các cột hàng đã lên
+    hangDaLenColumns.forEach(() => {
+        colWidths.push({wch: 12});
     });
     
     colWidths.push(
@@ -612,7 +661,8 @@ function saveRowToJson(bookId) {
     // Tạo dữ liệu để lưu
     const dataToSave = {
         books: books,
-        lanColumns: lanColumns
+        lanColumns: lanColumns,
+        hangDaLenColumns: hangDaLenColumns
     };
     
     // Gửi đến server
@@ -648,6 +698,10 @@ function loadDataFromServer() {
         
         if (data.lanColumns && Array.isArray(data.lanColumns)) {
             lanColumns = data.lanColumns;
+        }
+        
+        if (data.hangDaLenColumns && Array.isArray(data.hangDaLenColumns)) {
+            hangDaLenColumns = data.hangDaLenColumns;
         }
         
         // Reset filters and apply them
@@ -694,6 +748,48 @@ function deleteLanColumn(colName) {
     }
 }
 
+// Thêm cột hàng đã lên mới
+function addHangDaLenColumn() {
+    // Tìm số thứ tự lớn nhất hiện tại
+    let maxHangDaLen = 0;
+    hangDaLenColumns.forEach(col => {
+        const num = parseInt(col.replace('hangDaLen', ''));
+        if (!isNaN(num) && num > maxHangDaLen) maxHangDaLen = num;
+    });
+    const newHangDaLen = 'hangDaLen' + (maxHangDaLen + 1);
+    hangDaLenColumns.push(newHangDaLen);
+    
+    // Thêm thuộc tính cho từng book
+    books = books.map(book => ({ ...book, [newHangDaLen]: '' }));
+    applyFilters(); // Reapply filters after adding new column
+}
+
+// Xóa cột hàng đã lên với xác thực mật khẩu
+function deleteHangDaLenColumn(colName) {
+    // Mật khẩu cố định
+    const PASSWORD = "admin123";
+    
+    const password = prompt("Nhập mật khẩu để xóa cột:");
+    
+    if (password !== PASSWORD) {
+        alert("Mật khẩu không đúng!");
+        return;
+    }
+    
+    if (confirm(`Bạn có chắc muốn xóa cột "${colName}"?`)) {
+        // Xóa cột khỏi danh sách
+        hangDaLenColumns = hangDaLenColumns.filter(col => col !== colName);
+        
+        // Xóa thuộc tính khỏi tất cả sách
+        books = books.map(book => {
+            const { [colName]: removed, ...rest } = book;
+            return rest;
+        });
+        
+        applyFilters(); // Reapply filters after column deletion
+    }
+}
+
 // Thêm cột lần mới
 function addLanColumn() {
     // Tìm số thứ tự lớn nhất hiện tại
@@ -717,7 +813,9 @@ window.updateField = updateField;
 window.handleMangChange = handleMangChange;
 window.handleHangSachChange = handleHangSachChange;
 window.addLanColumn = addLanColumn;
+window.addHangDaLenColumn = addHangDaLenColumn;
 window.deleteLanColumn = deleteLanColumn;
+window.deleteHangDaLenColumn = deleteHangDaLenColumn;
 window.saveRowToJson = saveRowToJson;
 window.loadDataFromServer = loadDataFromServer;
 window.clearSearch = clearSearch;

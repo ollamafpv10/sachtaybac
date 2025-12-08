@@ -108,9 +108,9 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 	// Khởi tạo LanData map
 	b.LanData = make(map[string]string)
 
-	// Đọc các cột lần động (bất kỳ field nào bắt đầu bằng "lan")
+	// Đọc các cột lần động (bất kỳ field nào bắt đầu bằng "lan" hoặc "hangDaLen")
 	for key, value := range raw {
-		if len(key) >= 3 && key[:3] == "lan" {
+		if (len(key) >= 3 && key[:3] == "lan") || (len(key) >= 10 && key[:10] == "hangDaLen") {
 			if strValue, ok := value.(string); ok {
 				b.LanData[key] = strValue
 			}
@@ -121,9 +121,10 @@ func (b *Book) UnmarshalJSON(data []byte) error {
 }
 
 type AppData struct {
-	Books       []Book   `json:"books"`
-	LanColumns  []string `json:"lanColumns"`
-	LastUpdated string   `json:"lastUpdated"`
+	Books            []Book   `json:"books"`
+	LanColumns       []string `json:"lanColumns"`
+	HangDaLenColumns []string `json:"hangDaLenColumns"`
+	LastUpdated      string   `json:"lastUpdated"`
 }
 
 const dataDir = "./data"
@@ -161,16 +162,37 @@ func syncBooksWithLanColumns(data *AppData) {
 			}
 		}
 
-		// Xóa các lan column không còn trong LanColumns
+		// Thêm các hangDaLen column thiếu vào LanData
+		for _, hangCol := range data.HangDaLenColumns {
+			if _, exists := data.Books[i].LanData[hangCol]; !exists {
+				data.Books[i].LanData[hangCol] = ""
+			}
+		}
+
+		// Xóa các column không còn trong LanColumns hoặc HangDaLenColumns
 		for key := range data.Books[i].LanData {
 			found := false
+
+			// Check if it's in LanColumns
 			for _, lanCol := range data.LanColumns {
 				if key == lanCol {
 					found = true
 					break
 				}
 			}
-			if !found && len(key) >= 3 && key[:3] == "lan" {
+
+			// Check if it's in HangDaLenColumns
+			if !found {
+				for _, hangCol := range data.HangDaLenColumns {
+					if key == hangCol {
+						found = true
+						break
+					}
+				}
+			}
+
+			// Delete if not found and is a lan or hangDaLen column
+			if !found && ((len(key) >= 3 && key[:3] == "lan") || (len(key) >= 10 && key[:10] == "hangDaLen")) {
 				delete(data.Books[i].LanData, key)
 			}
 		}
